@@ -13,20 +13,3 @@ This project is protected. You may not use, copy, modify, or distribute any part
 To request permission, contact me through Email @engadielmitch@gmail.com
 
 This license is designed to preserve the symbolic, personal, and global integrity of the Neurotap system.
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Neurotap</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <h1>Welcome to Neurotap</h1>
-  <div id="chat-box"></div>
-  <input type="text" id="message-input" placeholder="Type your message...">
-  <button onclick="sendMessage()">Send</button>
-  <script src="firebase.js"></script>
-  <script src="main.js"></script>
-</body>
-</html>
-
-Add index.html for Neurotap interface
