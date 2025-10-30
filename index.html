@@ -1,14 +1,75 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
   <title>Neurotap</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Welcome to Neurotap</h1>
-  <div id="chat-box"></div>
-  <input type="text" id="message-input" placeholder="Type your message...">
-  <button onclick="sendMessage()">Send</button>
+  <h1>Neurotap</h1>
+
+  <!-- Brain zones -->
+  <section id="brain">
+    <h2>Brain zones</h2>
+    <div class="zones">
+      <div class="zone" id="amygdala">Amygdala</div>
+      <div class="zone" id="pfc">Prefrontal Cortex</div>
+      <div class="zone" id="hippocampus">Hippocampus</div>
+      <div class="zone" id="acc">Anterior Cingulate</div>
+    </div>
+    <div id="neurotags">
+      <strong>Neurotransmitters:</strong> <span id="tags-list">None</span>
+    </div>
+  </section>
+
+  <!-- Chat -->
+  <section id="chat">
+    <h2>Chat</h2>
+    <div id="chat-box"></div>
+    <div class="row">
+      <input type="text" id="username" placeholder="Your name (for group alerts)">
+      <input type="text" id="message-input" placeholder="Type your message…">
+      <button id="send-btn">Send</button>
+    </div>
+    <div class="row">
+      <button id="group-alert-btn">Group alert</button>
+    </div>
+  </section>
+
+  <!-- Tone history -->
+  <section id="history">
+    <h2>Tone history</h2>
+    <div class="row">
+      <button id="clear-history-btn">Clear history</button>
+    </div>
+    <ul id="history-list"></ul>
+  </section>
+
+  <!-- Translation -->
+  <section id="translate">
+    <h2>Global translation</h2>
+    <div class="row">
+      <select id="lang-select">
+        <option value="es">Spanish</option>
+        <option value="fr">French</option>
+        <option value="sw">Swahili</option>
+        <option value="de">German</option>
+      </select>
+      <button id="translate-btn">Translate last message</button>
+    </div>
+    <div id="translation-output"></div>
+  </section>
+
+  <!-- Rephraser -->
+  <section id="rephraser">
+    <h2>Rephraser</h2>
+    <div class="row">
+      <input type="text" id="rephrase-input" placeholder="Paste a sentence to improve…">
+      <button id="rephrase-btn">Rephrase</button>
+    </div>
+    <div id="rephrase-output"></div>
+  </section>
+
   <script src="firebase.js"></script>
   <script src="main.js"></script>
 </body>
