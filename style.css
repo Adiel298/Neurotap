@@ -1,0 +1,131 @@
+/* Import Montserrat font */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  background-color: #2c2c2c; /* Charcoal grey */
+  color: #f0f0f0;
+  margin: 20px;
+}
+
+/* Header with brain logo */
+h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+/* Brain logo before title */
+h1::before {
+  content: '';
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Brain_icon.svg/1024px-Brain_icon.svg.png');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Section styling */
+section {
+  background-color: #3a3a3a;
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+  flex-wrap: wrap;
+}
+
+#chat-box {
+  border: 1px solid #666;
+  border-radius: 6px;
+  background-color: #1f1f1f;
+  height: 220px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.message {
+  padding: 6px 8px;
+  margin: 4px 0;
+  border-left: 3px solid #888;
+  background-color: #2a2a2a;
+  color: #eee;
+}
+
+.message .meta {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.zones {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.zone {
+  padding: 8px;
+  text-align: center;
+  border: 1px solid #666;
+  border-radius: 6px;
+  background-color: #1f1f1f;
+  color: #ddd;
+}
+
+.zone.active {
+  border-color: #fff;
+  background-color: #444;
+  box-shadow: 0 0 0 2px #a7d3ff inset;
+}
+
+#tags-list {
+  margin-left: 6px;
+}
+
+#history-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+#history-list li {
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  border-left: 4px solid #bbb;
+  padding: 6px 8px;
+  margin: 4px 0;
+  color: #eee;
+}
+
+#translation-output,
+#rephrase-output {
+  padding: 8px;
+  background-color: #1f1f1f;
+  border: 1px solid #444;
+  border-radius: 6px;
+  min-height: 40px;
+  color: #eee;
+}
+
+input,
+select,
+button {
+  padding: 8px;
+  background-color: #444;
+  color: #fff;
+  border: 1px solid #666;
+  border-radius: 4px;
+}
+
+button {
+  cursor: pointer;
+}
