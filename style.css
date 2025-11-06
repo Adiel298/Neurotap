@@ -60,6 +60,11 @@ section {
   border-left: 3px solid #888;
   background-color: #2a2a2a;
   color: #eee;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.message:nth-child(even) {
+  background-color: #242424;
 }
 
 .message .meta {
@@ -80,6 +85,7 @@ section {
   border-radius: 6px;
   background-color: #1f1f1f;
   color: #ddd;
+  transition: all 0.2s ease-in-out;
 }
 
 .zone.active {
@@ -104,7 +110,15 @@ section {
   padding: 6px 8px;
   margin: 4px 0;
   color: #eee;
+  transition: all 0.2s ease-in-out;
 }
+
+/* Tone-colored history items */
+#history-list li[data-tone="anger"]   { border-left-color: #e66; }
+#history-list li[data-tone="joy"]     { border-left-color: #fc6; }
+#history-list li[data-tone="focus"]   { border-left-color: #6c6; }
+#history-list li[data-tone="empathy"] { border-left-color: #6cc; }
+#history-list li[data-tone="neutral"] { border-left-color: #bbb; }
 
 #translation-output,
 #rephrase-output {
@@ -124,8 +138,28 @@ button {
   color: #fff;
   border: 1px solid #666;
   border-radius: 4px;
+  transition: all 0.2s ease-in-out;
 }
 
 button {
   cursor: pointer;
+}
+
+/* Hover & focus states */
+button:hover,
+input:focus,
+select:focus {
+  border-color: #a7d3ff;
+  outline: none;
+  box-shadow: 0 0 4px #a7d3ff;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+  .zones {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  #chat-box {
+    height: 160px;
+  }
 }

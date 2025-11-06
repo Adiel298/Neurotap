@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <title>Neurotap</title>
   <link rel="stylesheet" href="style.css">
+
+  <!-- Google Search Console verification -->
+  <meta name="google-site-verification" content="GIvV9PMnUjgoplEDzDbO8PH8PKaLaum4RBHQ4Du-MP0" />
 </head>
 <body>
   <h1>Neurotap</h1>
@@ -70,7 +73,13 @@
     <div id="rephrase-output"></div>
   </section>
 
-  <script src="firebase.js"></script>
-  <script src="main.js"></script>
+  <!-- Auth -->
+  <section id="auth">
+    <h2>Login</h2>
+    <button id="login-btn">Sign In with Google</button>
+  </section>
+
+  <script type="module" src="firebase.js"></script>
+  <script type="module" src="main.js"></script>
 </body>
 </html>

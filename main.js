@@ -1,8 +1,12 @@
-// ====== Utility ======
+// ====== Imports ======
+import { db, auth, provider } from "./firebase.js";
+import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
+import { signInWithPopup } from "firebase/auth";
+
+// ====== UI Elements ======
 const chatBox = document.getElementById("chat-box");
 const inputEl = document.getElementById("message-input");
 const sendBtn = document.getElementById("send-btn");
-const usernameEl = document.getElementById("username");
 const tagsEl = document.getElementById("tags-list");
 const historyList = document.getElementById("history-list");
 const clearHistoryBtn = document.getElementById("clear-history-btn");
@@ -13,6 +17,7 @@ const rephraseInput = document.getElementById("rephrase-input");
 const rephraseBtn = document.getElementById("rephrase-btn");
 const rephraseOutput = document.getElementById("rephrase-output");
 const groupAlertBtn = document.getElementById("group-alert-btn");
+const loginBtn = document.getElementById("login-btn");
 
 const zones = {
   amygdala: document.getElementById("amygdala"),
@@ -21,12 +26,12 @@ const zones = {
   acc: document.getElementById("acc"),
 };
 
-// Keep last message in memory for translation.
 let lastMessage = "";
+let currentUser = null;
 
-// ====== Tone model (simple starter) ======
+// ====== Tone Model ======
 const toneLexicon = [
-  { tone: "empathy", keywords: ["sorry", "thank you", "appreciate", "forgive"], zones: ["acc","hippocampus"], neurotransmitters: ["oxytocin","serotonin"], color: "#6cc" },
+  { tone: "empathy", keywords: ["sorry","thank you","appreciate","forgive"], zones: ["acc","hippocampus"], neurotransmitters: ["oxytocin","serotonin"], color: "#6cc" },
   { tone: "anger", keywords: ["angry","hate","annoyed","furious"], zones: ["amygdala"], neurotransmitters: ["adrenaline","cortisol"], color: "#e66" },
   { tone: "focus", keywords: ["study","focus","discipline","practice"], zones: ["pfc"], neurotransmitters: ["dopamine"], color: "#6c6" },
   { tone: "joy", keywords: ["happy","excited","great","love"], zones: ["pfc","hippocampus"], neurotransmitters: ["dopamine","serotonin"], color: "#fc6" },
@@ -41,7 +46,7 @@ function classifyTone(text) {
   return toneLexicon.find(x => x.tone === "neutral");
 }
 
-// ====== Brain zone stimulation ======
+// ====== Brain Zones ======
 function clearZones() {
   Object.values(zones).forEach(z => z.classList.remove("active"));
 }
@@ -50,12 +55,12 @@ function stimulateZones(zoneIds) {
   zoneIds.forEach(id => zones[id]?.classList.add("active"));
 }
 
-// ====== Neurotransmitter tags ======
+// ====== Neurotransmitters ======
 function showNeuroTags(tags) {
   tagsEl.textContent = tags.join(", ");
 }
 
-// ====== Tone history dashboard (localStorage) ======
+// ====== History Dashboard ======
 const HISTORY_KEY = "neurotap_history";
 
 function loadHistory() {
@@ -69,11 +74,13 @@ function saveHistory(entry) {
 }
 function renderHistory() {
   historyList.innerHTML = "";
-  const hist = loadHistory();
-  hist.slice().reverse().forEach(item => {
+  loadHistory().slice().reverse().forEach(item => {
     const li = document.createElement("li");
-    li.style.borderLeftColor = item.color || "#bbb";
-    li.innerHTML = `<strong>${item.tone}</strong> — ${item.text} <span class="meta">(${new Date(item.ts).toLocaleString()})</span>`;
+    li.setAttribute("data-tone", item.tone);
+    li.innerHTML = `
+      <strong>${item.tone}</strong> — ${item.text}
+      <span class="meta">(${new Date(item.ts).toLocaleString()})</span>
+    `;
     historyList.appendChild(li);
   });
 }
@@ -82,111 +89,146 @@ clearHistoryBtn?.addEventListener("click", () => {
   renderHistory();
 });
 
-// ====== Chat send ======
-function sendMessage() {
-  const user = (usernameEl.value || "You").trim();
+// ====== Send Message ======
+async function sendMessage() {
+  if (!currentUser) {
+    alert("You must be signed in to send messages.");
+    return;
+  }
+
   const text = inputEl.value.trim();
   if (!text) return;
-  lastMessage = text;
 
-  // Classify tone
+  lastMessage = text;
   const tone = classifyTone(text);
 
-  // Brain zones + neurotransmitters
   stimulateZones(tone.zones);
   showNeuroTags(tone.neurotransmitters);
 
-  // Render chat message
-  const msgEl = document.createElement("div");
-  msgEl.className = "message";
-  msgEl.style.borderLeftColor = tone.color;
-  msgEl.innerHTML = `<div><strong>${user}:</strong> ${text}</div><div class="meta">tone: ${tone.tone}</div>`;
-  chatBox.appendChild(msgEl);
-  chatBox.scrollTop = chatBox.scrollHeight;
-
-  // Save to history
   saveHistory({ text, tone: tone.tone, color: tone.color, ts: Date.now() });
   renderHistory();
 
-  // Clear input
   inputEl.value = "";
+
+  try {
+    await addDoc(collection(db, "messages"), {
+      text,
+      tone: tone.tone,
+      timestamp: Date.now(),
+      userId: currentUser.uid,
+      userName: currentUser.displayName || "Anonymous"
+    });
+    console.log("Message saved to Firestore");
+  } catch (err) {
+    console.error("Failed to save message:", err);
+  }
 }
 sendBtn.addEventListener("click", sendMessage);
 inputEl.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
 
-// ====== Global translation mode (demo using LibreTranslate public API) ======
-// Note: for production, host your own instance or use a paid API. Public endpoints can be rate-limited.
+// ====== Real-Time Listener ======
+const messagesRef = collection(db, "messages");
+const q = query(messagesRef, orderBy("timestamp", "asc"));
+
+onSnapshot(q, (snapshot) => {
+  chatBox.innerHTML = "";
+  snapshot.docs.forEach((doc) => {
+    const msg = doc.data();
+
+    const msgEl = document.createElement("div");
+    msgEl.className = "message";
+    msgEl.setAttribute("data-tone", msg.tone || "neutral");
+
+    msgEl.innerHTML = `
+      <div><strong>${msg.userName || "Anonymous"}:</strong> ${msg.text}</div>
+      <div class="meta">tone: ${msg.tone}</div>
+    `;
+    chatBox.appendChild(msgEl);
+
+    const toneObj = toneLexicon.find(t => t.tone === msg.tone) || toneLexicon.find(t => t.tone === "neutral");
+    stimulateZones(toneObj.zones);
+    showNeuroTags(toneObj.neurotransmitters);
+  });
+  chatBox.scrollTop = chatBox.scrollHeight;
+});
+
+// ====== Translation ======
 async function translateLastMessage() {
   if (!lastMessage) {
     translationOutput.textContent = "No message to translate.";
     return;
   }
-  const target = langSelect.value || "es";
+
+  const target = langSelect.value || "es"; // default Spanish
   translationOutput.textContent = "Translating…";
+
   try {
     const res = await fetch("https://translate.astian.org/translate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ q: lastMessage, source: "auto", target, format: "text" }),
+      body: JSON.stringify({
+        q: lastMessage,
+        source: "auto",
+        target,
+        format: "text"
+      }),
     });
+
+    if (!res.ok) {
+      throw new Error(`Translation API error: ${res.status}`);
+    }
+
     const data = await res.json();
     translationOutput.textContent = data.translatedText || "(no result)";
   } catch (err) {
-    translationOutput.textContent = "Translation failed. Try again or configure a stable API.";
+    console.error("Translation failed:", err);
+    translationOutput.textContent = "Translation failed. Please try again.";
   }
 }
 translateBtn.addEventListener("click", translateLastMessage);
 
-// ====== Rephraser (rule-based starter) ======
+// ====== Rephraser ======
 function rephrase(text) {
   if (!text) return "";
   let s = text.trim();
-
-  // soften harsh words
   s = s.replace(/\bhate\b/gi, "really dislike");
   s = s.replace(/\bangry\b/gi, "frustrated");
   s = s.replace(/\bfurious\b/gi, "very upset");
-
-  // add empathy scaffolding if confrontational
   if (/\b(you|your)\b/i.test(s) && /\bwrong|lazy|bad\b/i.test(s)) {
-    s = "I might be missing context, but " + s.replace(/\b(you|your)\b/gi, "this").replace(/\bwrong|lazy|bad\b/gi, "not ideal");
+    s = "Consider rephrasing more constructively.";
   }
-
-  // clarity improvements
-  s = s.replace(/\bi think\b/gi, "I believe");
-  s = s.replace(/\bvery\b/gi, "quite");
-
-  // add positive close
-  if (!/[.!?]$/.test(s)) s += ".";
-  s += " Thanks for understanding.";
   return s;
 }
-
 rephraseBtn.addEventListener("click", () => {
-  const txt = rephraseInput.value.trim();
-  if (!txt) { rephraseOutput.textContent = "Enter a sentence to rephrase."; return; }
-  rephraseOutput.textContent = rephrase(txt);
+  const text = rephraseInput.value.trim();
+  rephraseOutput.textContent = rephrase(text) || "(no result)";
 });
 
-// ====== Group chat alert (demo) ======
-// In production: use Firebase Auth + Firestore to store messages and emit alerts to all connected users.
-groupAlertBtn.addEventListener("click", () => {
-  const user = (usernameEl.value || "Someone").trim();
-  const alertMsg = `${user} sent a group alert — reset, breathe, and refocus (30s).`;
-  const msgEl = document.createElement("div");
-  msgEl.className = "message";
-  msgEl.style.borderLeftColor = "#6aa0ff";
-  msgEl.innerHTML = `<div><strong>ALERT:</strong> ${alertMsg}</div><div class="meta">ritual: reset</div>`;
-  chatBox.appendChild(msgEl);
-  chatBox.scrollTop = chatBox.scrollHeight;
+// ====== Group Alert ======
+groupAlertBtn.addEventListener("click", async () => {
+  if (!currentUser) {
+    alert("You must be signed in to trigger alerts.");
+    return;
+  }
+  const alertMsg = `${currentUser.displayName || "Anonymous"} triggered a group alert!`;
+  await addDoc(collection(db, "messages"), {
+    text: alertMsg,
+    tone: "neutral",
+    timestamp: Date.now(),
+    userId: currentUser.uid,
+    userName: currentUser.displayName || "Anonymous"
+  });
+});
 
-  // Log alert in history
-  saveHistory({ text: alertMsg, tone: "alert", color: "#6aa0ff", ts: Date.now() });
-  renderHistory();
-
-  // Optional: visual brain cue for collective regulation
-  stimulateZones(["acc","pfc"]);
-  showNeuroTags(["serotonin","dopamine"]);
+// ====== Auth ======
+loginBtn.addEventListener("click", async () => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    currentUser = result.user;
+    alert(`Signed in as ${currentUser.displayName}`);
+  } catch (err) {
+    console.error("Login failed:", err);
+  }
 });
 
 // ====== Initialize ======
