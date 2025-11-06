@@ -228,6 +228,7 @@ loginBtn.addEventListener("click", async () => {
     alert(`Signed in as ${currentUser.displayName}`);
   } catch (err) {
     console.error("Login failed:", err);
+    alert("Login failed. Check console for details.");
   }
 });
 

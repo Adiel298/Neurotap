@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>Neurotap</title>
@@ -9,11 +9,13 @@
   <meta name="google-site-verification" content="GIvV9PMnUjgoplEDzDbO8PH8PKaLaum4RBHQ4Du-MP0" />
 </head>
 <body>
-  <h1>Neurotap</h1>
+  <header>
+    <h1>Neurotap</h1>
+  </header>
 
-  <!-- Brain zones -->
+  <!-- ===== Brain Zones ===== -->
   <section id="brain">
-    <h2>Brain zones</h2>
+    <h2>Brain Zones</h2>
     <div class="zones">
       <div class="zone" id="amygdala">Amygdala</div>
       <div class="zone" id="pfc">Prefrontal Cortex</div>
@@ -21,11 +23,12 @@
       <div class="zone" id="acc">Anterior Cingulate</div>
     </div>
     <div id="neurotags">
-      <strong>Neurotransmitters:</strong> <span id="tags-list">None</span>
+      <strong>Neurotransmitters:</strong>
+      <span id="tags-list">None</span>
     </div>
   </section>
 
-  <!-- Chat -->
+  <!-- ===== Chat ===== -->
   <section id="chat">
     <h2>Chat</h2>
     <div id="chat-box"></div>
@@ -35,51 +38,4 @@
       <button id="send-btn">Send</button>
     </div>
     <div class="row">
-      <button id="group-alert-btn">Group alert</button>
-    </div>
-  </section>
-
-  <!-- Tone history -->
-  <section id="history">
-    <h2>Tone history</h2>
-    <div class="row">
-      <button id="clear-history-btn">Clear history</button>
-    </div>
-    <ul id="history-list"></ul>
-  </section>
-
-  <!-- Translation -->
-  <section id="translate">
-    <h2>Global translation</h2>
-    <div class="row">
-      <select id="lang-select">
-        <option value="es">Spanish</option>
-        <option value="fr">French</option>
-        <option value="sw">Swahili</option>
-        <option value="de">German</option>
-      </select>
-      <button id="translate-btn">Translate last message</button>
-    </div>
-    <div id="translation-output"></div>
-  </section>
-
-  <!-- Rephraser -->
-  <section id="rephraser">
-    <h2>Rephraser</h2>
-    <div class="row">
-      <input type="text" id="rephrase-input" placeholder="Paste a sentence to improve…">
-      <button id="rephrase-btn">Rephrase</button>
-    </div>
-    <div id="rephrase-output"></div>
-  </section>
-
-  <!-- Auth -->
-  <section id="auth">
-    <h2>Login</h2>
-    <button id="login-btn">Sign In with Google</button>
-  </section>
-
-  <script type="module" src="firebase.js"></script>
-  <script type="module" src="main.js"></script>
-</body>
-</html>
+      <button id="group-alert-btn">Group Alert</button>
