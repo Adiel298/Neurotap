@@ -1,7 +1,6 @@
 // ====== Imports ======
-import { db, auth, provider } from "./firebase.js";
-import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
-import { signInWithPopup } from "firebase/auth";
+import { db } from "./firebase.js";
+import { ref, push, onValue } from "firebase/database";
 
 // ====== UI Elements ======
 const chatBox = document.getElementById("chat-box");
@@ -17,7 +16,7 @@ const rephraseInput = document.getElementById("rephrase-input");
 const rephraseBtn = document.getElementById("rephrase-btn");
 const rephraseOutput = document.getElementById("rephrase-output");
 const groupAlertBtn = document.getElementById("group-alert-btn");
-const loginBtn = document.getElementById("login-btn");
+const usernameInput = document.getElementById("username");
 
 const zones = {
   amygdala: document.getElementById("amygdala"),
@@ -27,7 +26,6 @@ const zones = {
 };
 
 let lastMessage = "";
-let currentUser = null;
 
 // ====== Tone Model ======
 const toneLexicon = [
@@ -91,11 +89,6 @@ clearHistoryBtn?.addEventListener("click", () => {
 
 // ====== Send Message ======
 async function sendMessage() {
-  if (!currentUser) {
-    alert("You must be signed in to send messages.");
-    return;
-  }
-
   const text = inputEl.value.trim();
   if (!text) return;
 
@@ -111,14 +104,13 @@ async function sendMessage() {
   inputEl.value = "";
 
   try {
-    await addDoc(collection(db, "messages"), {
+    await push(ref(db, "messages"), {
       text,
       tone: tone.tone,
       timestamp: Date.now(),
-      userId: currentUser.uid,
-      userName: currentUser.displayName || "Anonymous"
+      userName: usernameInput.value || "Anonymous"
     });
-    console.log("Message saved to Firestore");
+    console.log("Message saved to Realtime Database");
   } catch (err) {
     console.error("Failed to save message:", err);
   }
@@ -127,13 +119,10 @@ sendBtn.addEventListener("click", sendMessage);
 inputEl.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
 
 // ====== Real-Time Listener ======
-const messagesRef = collection(db, "messages");
-const q = query(messagesRef, orderBy("timestamp", "asc"));
-
-onSnapshot(q, (snapshot) => {
+onValue(ref(db, "messages"), (snapshot) => {
   chatBox.innerHTML = "";
-  snapshot.docs.forEach((doc) => {
-    const msg = doc.data();
+  snapshot.forEach((child) => {
+    const msg = child.val();
 
     const msgEl = document.createElement("div");
     msgEl.className = "message";
@@ -174,9 +163,7 @@ async function translateLastMessage() {
       }),
     });
 
-    if (!res.ok) {
-      throw new Error(`Translation API error: ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`Translation API error: ${res.status}`);
 
     const data = await res.json();
     translationOutput.textContent = data.translatedText || "(no result)";
@@ -206,30 +193,13 @@ rephraseBtn.addEventListener("click", () => {
 
 // ====== Group Alert ======
 groupAlertBtn.addEventListener("click", async () => {
-  if (!currentUser) {
-    alert("You must be signed in to trigger alerts.");
-    return;
-  }
-  const alertMsg = `${currentUser.displayName || "Anonymous"} triggered a group alert!`;
-  await addDoc(collection(db, "messages"), {
+  const alertMsg = `${usernameInput.value || "Anonymous"} triggered a group alert!`;
+  await push(ref(db, "messages"), {
     text: alertMsg,
     tone: "neutral",
     timestamp: Date.now(),
-    userId: currentUser.uid,
-    userName: currentUser.displayName || "Anonymous"
+    userName: usernameInput.value || "Anonymous"
   });
-});
-
-// ====== Auth ======
-loginBtn.addEventListener("click", async () => {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    currentUser = result.user;
-    alert(`Signed in as ${currentUser.displayName}`);
-  } catch (err) {
-    console.error("Login failed:", err);
-    alert("Login failed. Check console for details.");
-  }
 });
 
 // ====== Initialize ======
