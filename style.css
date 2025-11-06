@@ -3,9 +3,10 @@
 
 body {
   font-family: 'Montserrat', sans-serif;
-  background-color: #2c2c2c; /* Charcoal grey */
+  background-color: #121212; /* Deep dark aesthetic */
   color: #f0f0f0;
   margin: 20px;
+  line-height: 1.6;
 }
 
 /* Header with brain logo */
@@ -15,29 +16,46 @@ h1 {
   gap: 10px;
   font-weight: 600;
   font-size: 28px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  color: #ffffff;
+  letter-spacing: 1px;
 }
 
 /* Brain logo before title */
 h1::before {
   content: '';
   display: inline-block;
-  width: 24px;
-  height: 24px;
-  background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Brain_icon.svg/1024px-Brain_icon.svg.png');
-  background-size: cover;
+  width: 28px;
+  height: 28px;
+  background-image: url('https://upload.wikimedia.org/wikipedia/commons/3/3c/Brain_icon.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
   background-position: center;
+  filter: invert(100%); /* ensures visibility on dark background */
+  animation: pulseLogo 2s infinite alternate;
+}
+
+@keyframes pulseLogo {
+  from { transform: scale(1); opacity: 0.8; }
+  to   { transform: scale(1.1); opacity: 1; }
 }
 
 /* Section styling */
 section {
-  background-color: #3a3a3a;
-  border: 1px solid #555;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 16px;
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease-in-out;
 }
 
+section:hover {
+  transform: scale(1.01);
+  border-color: #a7d3ff;
+}
+
+/* Row layout */
 .row {
   display: flex;
   gap: 8px;
@@ -45,22 +63,27 @@ section {
   flex-wrap: wrap;
 }
 
+/* Chat box */
 #chat-box {
-  border: 1px solid #666;
-  border-radius: 6px;
-  background-color: #1f1f1f;
-  height: 220px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background-color: #181818;
+  height: 240px;
   overflow-y: auto;
-  padding: 8px;
+  padding: 10px;
+  scroll-behavior: smooth;
 }
 
+/* Messages */
 .message {
-  padding: 6px 8px;
-  margin: 4px 0;
+  padding: 8px 10px;
+  margin: 6px 0;
   border-left: 3px solid #888;
-  background-color: #2a2a2a;
+  background-color: #222;
   color: #eee;
-  transition: background-color 0.2s ease-in-out;
+  opacity: 0;
+  transform: translateY(5px);
+  animation: fadeIn 0.4s forwards;
 }
 
 .message:nth-child(even) {
@@ -72,45 +95,63 @@ section {
   color: #aaa;
 }
 
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Brain zones */
 .zones {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  gap: 10px;
 }
 
 .zone {
-  padding: 8px;
+  padding: 10px;
   text-align: center;
-  border: 1px solid #666;
-  border-radius: 6px;
-  background-color: #1f1f1f;
+  border: 1px solid #555;
+  border-radius: 8px;
+  background-color: #181818;
   color: #ddd;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.3s ease-in-out;
 }
 
 .zone.active {
   border-color: #fff;
-  background-color: #444;
-  box-shadow: 0 0 0 2px #a7d3ff inset;
+  background-color: #333;
+  box-shadow: 0 0 10px #a7d3ff inset;
+  animation: pulseZone 1.2s infinite alternate;
 }
 
+@keyframes pulseZone {
+  from { box-shadow: 0 0 4px #a7d3ff inset; }
+  to   { box-shadow: 0 0 14px #a7d3ff inset; }
+}
+
+/* Neurotransmitters */
 #tags-list {
   margin-left: 6px;
+  font-weight: 500;
+  color: #a7d3ff;
 }
 
+/* History list */
 #history-list {
   list-style: none;
   padding-left: 0;
 }
 
 #history-list li {
-  background-color: #2a2a2a;
+  background-color: #222;
   border: 1px solid #444;
   border-left: 4px solid #bbb;
-  padding: 6px 8px;
-  margin: 4px 0;
+  padding: 8px 10px;
+  margin: 6px 0;
   color: #eee;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.3s ease-in-out;
 }
 
 /* Tone-colored history items */
@@ -120,29 +161,33 @@ section {
 #history-list li[data-tone="empathy"] { border-left-color: #6cc; }
 #history-list li[data-tone="neutral"] { border-left-color: #bbb; }
 
+/* Translation & Rephraser outputs */
 #translation-output,
 #rephrase-output {
-  padding: 8px;
-  background-color: #1f1f1f;
+  padding: 10px;
+  background-color: #181818;
   border: 1px solid #444;
-  border-radius: 6px;
+  border-radius: 8px;
   min-height: 40px;
   color: #eee;
+  transition: background-color 0.3s ease-in-out;
 }
 
+/* Inputs & buttons */
 input,
 select,
 button {
-  padding: 8px;
-  background-color: #444;
+  padding: 10px;
+  background-color: #2a2a2a;
   color: #fff;
-  border: 1px solid #666;
-  border-radius: 4px;
-  transition: all 0.2s ease-in-out;
+  border: 1px solid #555;
+  border-radius: 6px;
+  transition: all 0.3s ease-in-out;
 }
 
 button {
   cursor: pointer;
+  font-weight: 600;
 }
 
 /* Hover & focus states */
@@ -151,7 +196,34 @@ input:focus,
 select:focus {
   border-color: #a7d3ff;
   outline: none;
-  box-shadow: 0 0 4px #a7d3ff;
+  box-shadow: 0 0 6px #a7d3ff;
+}
+
+/* Distinct Google login button */
+#login-btn {
+  background-color: #4285F4; /* Google blue */
+  border: none;
+}
+#login-btn:hover {
+  background-color: #357ae8;
+  animation: wiggle 0.4s ease-in-out;
+}
+
+@keyframes wiggle {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(2deg); }
+  50% { transform: rotate(-2deg); }
+  75% { transform: rotate(2deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Section titles */
+section h2 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #a7d3ff;
+  border-bottom: 1px solid #444;
+  padding-bottom: 4px;
 }
 
 /* Mobile responsiveness */
