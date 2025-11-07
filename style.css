@@ -199,15 +199,7 @@ select:focus {
   box-shadow: 0 0 6px #a7d3ff;
 }
 
-/* Distinct Google login button */
-#login-btn {
-  background-color: #4285F4; /* Google blue */
-  border: none;
-}
-#login-btn:hover {
-  background-color: #357ae8;
-  animation: wiggle 0.4s ease-in-out;
-}
+
 
 @keyframes wiggle {
   0% { transform: rotate(0deg); }
@@ -233,5 +225,4 @@ section h2 {
   }
   #chat-box {
     height: 160px;
-  }
-}
+ }

@@ -110,16 +110,21 @@ async function sendMessage() {
 
   inputEl.value = "";
 
+  const payload = {
+    text,
+    tone: tone.tone,
+    timestamp: Date.now(),
+    userName: getSafeUserName()
+  };
+
+  console.log("[Neurotap] Sending payload:", payload);
+
   try {
-    await push(ref(db, "messages"), {
-      text,
-      tone: tone.tone,
-      timestamp: Date.now(),
-      userName: getSafeUserName()
-    });
-    console.log("Message saved to Realtime Database");
+    const r = await push(ref(db, "messages"), payload);
+    console.log("[Neurotap] Push result key:", r.key);
   } catch (err) {
-    console.error("Failed to save message:", err);
+    console.error("[Neurotap] Push failed:", err);
+    alert("Failed to save message. Check console for details.");
   }
 }
 sendBtn.addEventListener("click", sendMessage);
@@ -135,7 +140,6 @@ onValue(ref(db, "messages"), (snapshot) => {
     msgEl.className = "message";
     msgEl.setAttribute("data-tone", msg.tone || "neutral");
 
-    // 👇 Add a visual tag for "New User"
     const isNewUser = !msg.userName || msg.userName === "New User";
     const userLabel = isNewUser
       ? `<span class="new-user-tag">[New User]</span>`
