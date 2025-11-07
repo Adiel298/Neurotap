@@ -87,6 +87,13 @@ clearHistoryBtn?.addEventListener("click", () => {
   renderHistory();
 });
 
+// ====== Safe Username Helper ======
+function getSafeUserName() {
+  return usernameInput.value && usernameInput.value.trim() !== ""
+    ? usernameInput.value.trim()
+    : "New User"; // 👈 fallback
+}
+
 // ====== Send Message ======
 async function sendMessage() {
   const text = inputEl.value.trim();
@@ -108,7 +115,7 @@ async function sendMessage() {
       text,
       tone: tone.tone,
       timestamp: Date.now(),
-      userName: usernameInput.value || "Anonymous"
+      userName: getSafeUserName()
     });
     console.log("Message saved to Realtime Database");
   } catch (err) {
@@ -128,8 +135,14 @@ onValue(ref(db, "messages"), (snapshot) => {
     msgEl.className = "message";
     msgEl.setAttribute("data-tone", msg.tone || "neutral");
 
+    // 👇 Add a visual tag for "New User"
+    const isNewUser = !msg.userName || msg.userName === "New User";
+    const userLabel = isNewUser
+      ? `<span class="new-user-tag">[New User]</span>`
+      : `<strong>${msg.userName}</strong>`;
+
     msgEl.innerHTML = `
-      <div><strong>${msg.userName || "Anonymous"}:</strong> ${msg.text}</div>
+      <div>${userLabel}: ${msg.text}</div>
       <div class="meta">tone: ${msg.tone}</div>
     `;
     chatBox.appendChild(msgEl);
@@ -193,12 +206,12 @@ rephraseBtn.addEventListener("click", () => {
 
 // ====== Group Alert ======
 groupAlertBtn.addEventListener("click", async () => {
-  const alertMsg = `${usernameInput.value || "Anonymous"} triggered a group alert!`;
+  const alertMsg = `${getSafeUserName()} triggered a group alert!`;
   await push(ref(db, "messages"), {
     text: alertMsg,
     tone: "neutral",
     timestamp: Date.now(),
-    userName: usernameInput.value || "Anonymous"
+    userName: getSafeUserName()
   });
 });
 
