@@ -1,9 +1,8 @@
 // ====== Imports ======
 import { io } from "socket.io-client";
 
-// Connect to your Socket.IO server
-const socket = io("http://localhost:3000"); 
-// ⚠️ Replace with your deployed server URL when live
+// Connect to deployed Socket.IO backend (works on Vercel)
+const socket = io("/", { path: "/api/socket" });
 
 // ====== UI Elements ======
 const chatBox = document.getElementById("chat-box");
@@ -133,10 +132,9 @@ socket.on("message", (msg) => {
   msgEl.className = "message";
   msgEl.setAttribute("data-tone", msg.tone || "neutral");
 
-  const isNewUser = !msg.userName || msg.userName === "New User";
-  const userLabel = isNewUser
-    ? `<span class="new-user-tag">[New User]</span>`
-    : `<strong>${msg.userName}</strong>`;
+  const userLabel = msg.userName
+    ? `<strong>${msg.userName}</strong>`
+    : `<span class="new-user-tag">[New User]</span>`;
 
   msgEl.innerHTML = `
     <div>${userLabel}: ${msg.text}</div>
