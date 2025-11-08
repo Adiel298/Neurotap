@@ -1,6 +1,9 @@
 // ====== Imports ======
-import { db } from "./firebase.js";
-import { ref, push, onValue } from "firebase/database";
+import { io } from "socket.io-client";
+
+// Connect to your Socket.IO server
+const socket = io("http://localhost:3000"); 
+// ⚠️ Replace with your deployed server URL when live
 
 // ====== UI Elements ======
 const chatBox = document.getElementById("chat-box");
@@ -89,13 +92,12 @@ clearHistoryBtn?.addEventListener("click", () => {
 
 // ====== Safe Username Helper ======
 function getSafeUserName() {
-  return usernameInput.value && usernameInput.value.trim() !== ""
-    ? usernameInput.value.trim()
-    : "New User"; // 👈 fallback
+  const name = usernameInput.value?.trim();
+  return name && name.length > 0 ? name : "New User";
 }
 
 // ====== Send Message ======
-async function sendMessage() {
+function sendMessage() {
   const text = inputEl.value.trim();
   if (!text) return;
 
@@ -118,44 +120,34 @@ async function sendMessage() {
   };
 
   console.log("[Neurotap] Sending payload:", payload);
-
-  try {
-    const r = await push(ref(db, "messages"), payload);
-    console.log("[Neurotap] Push result key:", r.key);
-  } catch (err) {
-    console.error("[Neurotap] Push failed:", err);
-    alert("Failed to save message. Check console for details.");
-  }
+  socket.emit("message", payload);
 }
 sendBtn.addEventListener("click", sendMessage);
 inputEl.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
 
 // ====== Real-Time Listener ======
-onValue(ref(db, "messages"), (snapshot) => {
-  chatBox.innerHTML = "";
-  snapshot.forEach((child) => {
-    const msg = child.val();
+socket.on("message", (msg) => {
+  console.log("[Neurotap] Received message:", msg);
 
-    const msgEl = document.createElement("div");
-    msgEl.className = "message";
-    msgEl.setAttribute("data-tone", msg.tone || "neutral");
+  const msgEl = document.createElement("div");
+  msgEl.className = "message";
+  msgEl.setAttribute("data-tone", msg.tone || "neutral");
 
-    const isNewUser = !msg.userName || msg.userName === "New User";
-    const userLabel = isNewUser
-      ? `<span class="new-user-tag">[New User]</span>`
-      : `<strong>${msg.userName}</strong>`;
+  const isNewUser = !msg.userName || msg.userName === "New User";
+  const userLabel = isNewUser
+    ? `<span class="new-user-tag">[New User]</span>`
+    : `<strong>${msg.userName}</strong>`;
 
-    msgEl.innerHTML = `
-      <div>${userLabel}: ${msg.text}</div>
-      <div class="meta">tone: ${msg.tone}</div>
-    `;
-    chatBox.appendChild(msgEl);
-
-    const toneObj = toneLexicon.find(t => t.tone === msg.tone) || toneLexicon.find(t => t.tone === "neutral");
-    stimulateZones(toneObj.zones);
-    showNeuroTags(toneObj.neurotransmitters);
-  });
+  msgEl.innerHTML = `
+    <div>${userLabel}: ${msg.text}</div>
+    <div class="meta">tone: ${msg.tone} | sent at ${new Date(msg.timestamp).toLocaleString()}</div>
+  `;
+  chatBox.appendChild(msgEl);
   chatBox.scrollTop = chatBox.scrollHeight;
+
+  const toneObj = toneLexicon.find(t => t.tone === msg.tone) || toneLexicon.find(t => t.tone === "neutral");
+  stimulateZones(toneObj.zones);
+  showNeuroTags(toneObj.neurotransmitters);
 });
 
 // ====== Translation ======
@@ -165,7 +157,7 @@ async function translateLastMessage() {
     return;
   }
 
-  const target = langSelect.value || "es"; // default Spanish
+  const target = langSelect.value || "es";
   translationOutput.textContent = "Translating…";
 
   try {
@@ -209,15 +201,13 @@ rephraseBtn.addEventListener("click", () => {
 });
 
 // ====== Group Alert ======
-groupAlertBtn.addEventListener("click", async () => {
+groupAlertBtn.addEventListener("click", () => {
   const alertMsg = `${getSafeUserName()} triggered a group alert!`;
-  await push(ref(db, "messages"), {
+  socket.emit("message", {
     text: alertMsg,
     tone: "neutral",
     timestamp: Date.now(),
     userName: getSafeUserName()
   });
+  console.log("[Neurotap] Group alert sent.");
 });
-
-// ====== Initialize ======
-renderHistory();
