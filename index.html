@@ -3,10 +3,21 @@
 <head>
   <meta charset="utf-8">
   <title>Neurotap</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Styles -->
   <link rel="stylesheet" href="style.css">
 
   <!-- Optional: Google Search Console verification -->
   <meta name="google-site-verification" content="GIvV9PMnUjgoplEDzDbO8PH8PKaLaum4RBHQ4Du-MP0" />
+
+  <!-- TalkJS loader (async, non-blocking) -->
+  <script>
+    (function(t,a,l,k,j,s){
+      s=a.createElement('script');s.async=1;s.src='https://cdn.talkjs.com/talk.js';a.head.appendChild(s)
+      ;k=t.Promise;t.Talk={v:3,ready:{then:function(f){if(k)return new k(function(r,e){l.push([f,r,e])});l
+      .push([f])},catch:function(){return k&&new k()},c:l}};})(window,document,[]);
+  </script>
 </head>
 <body>
   <header>
@@ -28,10 +39,13 @@
     </div>
   </section>
 
-  <!-- ===== Chat ===== -->
+  <!-- ===== Chat (TalkJS mounts here) ===== -->
   <section id="chat">
     <h2>Chat</h2>
-    <div id="chat-box"></div>
+    <!-- TalkJS will replace this container with its inbox UI -->
+    <div id="chat-box" style="height: 400px;"></div>
+
+    <!-- Inputs below remain for your local features (tone, history, translate, rephrase) -->
     <div class="row">
       <input type="text" id="username" placeholder="Your name (for group alerts)">
       <input type="text" id="message-input" placeholder="Type your message…">
@@ -77,7 +91,40 @@
   </section>
 
   <!-- ===== Scripts ===== -->
-  <!-- Remove firebase.js, keep only main.js -->
   <script type="module" src="main.js"></script>
+
+  <!-- Inline TalkJS bootstrap (optional): initialize after loader is ready -->
+  <script>
+    Talk.ready.then(() => {
+      // Replace with your actual TalkJS App ID
+      const APP_ID = "YOUR_APP_ID";
+
+      const me = new Talk.User({
+        id: "adiel",
+        name: "Adiel",
+        email: "adiel@example.com",
+        photoUrl: "https://demo.talkjs.com/img/avatar-1.jpg",
+        role: "default"
+      });
+
+      // Demo counterpart user; in production, set this dynamically
+      const other = new Talk.User({
+        id: "guest",
+        name: "Guest",
+        email: "guest@example.com",
+        photoUrl: "https://demo.talkjs.com/img/avatar-2.jpg",
+        role: "default"
+      });
+
+      const session = new Talk.Session({ appId: APP_ID, me });
+
+      const conversation = session.getOrCreateConversation("neurotap-convo");
+      conversation.setParticipant(me);
+      conversation.setParticipant(other);
+
+      const inbox = session.createInbox({ selected: conversation });
+      inbox.mount(document.getElementById("chat-box"));
+    });
+  </script>
 </body>
 </html>

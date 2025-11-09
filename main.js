@@ -1,9 +1,3 @@
-// ====== Imports ======
-import { io } from "socket.io-client";
-
-// Connect to deployed Socket.IO backend (works on Vercel)
-const socket = io("/", { path: "/api/socket" });
-
 // ====== UI Elements ======
 const chatBox = document.getElementById("chat-box");
 const inputEl = document.getElementById("message-input");
@@ -95,7 +89,7 @@ function getSafeUserName() {
   return name && name.length > 0 ? name : "New User";
 }
 
-// ====== Send Message ======
+// ====== Send Message (local tone + history) ======
 function sendMessage() {
   const text = inputEl.value.trim();
   if (!text) return;
@@ -111,42 +105,10 @@ function sendMessage() {
 
   inputEl.value = "";
 
-  const payload = {
-    text,
-    tone: tone.tone,
-    timestamp: Date.now(),
-    userName: getSafeUserName()
-  };
-
-  console.log("[Neurotap] Sending payload:", payload);
-  socket.emit("message", payload);
+  console.log("[Neurotap] Message processed locally:", { text, tone: tone.tone });
 }
 sendBtn.addEventListener("click", sendMessage);
 inputEl.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
-
-// ====== Real-Time Listener ======
-socket.on("message", (msg) => {
-  console.log("[Neurotap] Received message:", msg);
-
-  const msgEl = document.createElement("div");
-  msgEl.className = "message";
-  msgEl.setAttribute("data-tone", msg.tone || "neutral");
-
-  const userLabel = msg.userName
-    ? `<strong>${msg.userName}</strong>`
-    : `<span class="new-user-tag">[New User]</span>`;
-
-  msgEl.innerHTML = `
-    <div>${userLabel}: ${msg.text}</div>
-    <div class="meta">tone: ${msg.tone} | sent at ${new Date(msg.timestamp).toLocaleString()}</div>
-  `;
-  chatBox.appendChild(msgEl);
-  chatBox.scrollTop = chatBox.scrollHeight;
-
-  const toneObj = toneLexicon.find(t => t.tone === msg.tone) || toneLexicon.find(t => t.tone === "neutral");
-  stimulateZones(toneObj.zones);
-  showNeuroTags(toneObj.neurotransmitters);
-});
 
 // ====== Translation ======
 async function translateLastMessage() {
@@ -201,11 +163,35 @@ rephraseBtn.addEventListener("click", () => {
 // ====== Group Alert ======
 groupAlertBtn.addEventListener("click", () => {
   const alertMsg = `${getSafeUserName()} triggered a group alert!`;
-  socket.emit("message", {
-    text: alertMsg,
-    tone: "neutral",
-    timestamp: Date.now(),
-    userName: getSafeUserName()
+  console.log("[Neurotap] Group alert triggered:", alertMsg);
+});
+
+// ====== TalkJS Integration ======
+Talk.ready.then(() => {
+  const APP_ID = "taYrlEsd"; // your real TalkJS App ID
+
+  const me = new Talk.User({
+    id: getSafeUserName(),
+    name: getSafeUserName(),
+    email: `${getSafeUserName().toLowerCase()}@example.com`,
+    photoUrl: "https://demo.talkjs.com/img/avatar-1.jpg",
+    role: "default"
   });
-  console.log("[Neurotap] Group alert sent.");
+
+  const other = new Talk.User({
+    id: "guest",
+    name: "Guest",
+    email: "guest@example.com",
+    photoUrl: "https://demo.talkjs.com/img/avatar-2.jpg",
+    role: "default"
+  });
+
+  const session = new Talk.Session({ appId: APP_ID, me });
+
+  const conversation = session.getOrCreateConversation("neurotap-convo");
+  conversation.setParticipant(me);
+  conversation.setParticipant(other);
+
+  const inbox = session.createInbox({ selected: conversation });
+  inbox.mount(chatBox);
 });
