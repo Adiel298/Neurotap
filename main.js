@@ -13,6 +13,7 @@ const rephraseBtn = document.getElementById("rephrase-btn");
 const rephraseOutput = document.getElementById("rephrase-output");
 const groupAlertBtn = document.getElementById("group-alert-btn");
 const usernameInput = document.getElementById("username");
+const toneDisplay = document.getElementById("tone-display"); // NEW: tone badge element
 
 const zones = {
   amygdala: document.getElementById("amygdala"),
@@ -89,7 +90,7 @@ function getSafeUserName() {
   return name && name.length > 0 ? name : "New User";
 }
 
-// ====== Send Message (local tone + history) ======
+// ====== Send Message (tone + history only, no local chat UI) ======
 function sendMessage() {
   const text = inputEl.value.trim();
   if (!text) return;
@@ -103,8 +104,13 @@ function sendMessage() {
   saveHistory({ text, tone: tone.tone, color: tone.color, ts: Date.now() });
   renderHistory();
 
-  inputEl.value = "";
+  // Show tone badge
+  if (toneDisplay) {
+    toneDisplay.textContent = `Tone: ${tone.tone}`;
+    toneDisplay.style.color = tone.color;
+  }
 
+  inputEl.value = "";
   console.log("[Neurotap] Message processed locally:", { text, tone: tone.tone });
 }
 sendBtn.addEventListener("click", sendMessage);
@@ -192,6 +198,29 @@ Talk.ready.then(() => {
   conversation.setParticipant(me);
   conversation.setParticipant(other);
 
-  const inbox = session.createInbox({ selected: conversation });
+  // ✅ Enable built-in dark mode theme
+  const inbox = session.createInbox({
+    selected: conversation,
+    theme: "default-dark"
+  });
   inbox.mount(chatBox);
+
+  // ===== Hook Neurotap Tone Detection into TalkJS =====
+  conversation.on("message", (event) => {
+    const text = event.message.text;
+    const tone = classifyTone(text);
+
+    stimulateZones(tone.zones);
+    showNeuroTags(tone.neurotransmitters);
+    saveHistory({ text, tone: tone.tone, color: tone.color, ts: Date.now() });
+    renderHistory();
+
+    // Show tone badge
+    if (toneDisplay) {
+      toneDisplay.textContent = `Tone: ${tone.tone}`;
+      toneDisplay.style.color = tone.color;
+    }
+
+    console.log("[Neurotap] Tone detected from TalkJS message:", tone.tone);
+  });
 });

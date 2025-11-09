@@ -42,10 +42,12 @@
   <!-- ===== Chat (TalkJS mounts here) ===== -->
   <section id="chat">
     <h2>Chat</h2>
-    <!-- TalkJS will replace this container with its inbox UI -->
     <div id="chat-box" style="height: 400px;"></div>
 
-    <!-- Inputs below remain for your local features (tone, history, translate, rephrase) -->
+    <!-- Tone badge -->
+    <div id="tone-display" style="margin-top:8px; font-weight:600;"></div>
+
+    <!-- Inputs for local features -->
     <div class="row">
       <input type="text" id="username" placeholder="Your name (for group alerts)">
       <input type="text" id="message-input" placeholder="Type your message…">
@@ -92,39 +94,5 @@
 
   <!-- ===== Scripts ===== -->
   <script type="module" src="main.js"></script>
-
-  <!-- Inline TalkJS bootstrap (optional): initialize after loader is ready -->
-  <script>
-    Talk.ready.then(() => {
-      // Replace with your actual TalkJS App ID
-      const APP_ID = "YOUR_APP_ID";
-
-      const me = new Talk.User({
-        id: "adiel",
-        name: "Adiel",
-        email: "adiel@example.com",
-        photoUrl: "https://demo.talkjs.com/img/avatar-1.jpg",
-        role: "default"
-      });
-
-      // Demo counterpart user; in production, set this dynamically
-      const other = new Talk.User({
-        id: "guest",
-        name: "Guest",
-        email: "guest@example.com",
-        photoUrl: "https://demo.talkjs.com/img/avatar-2.jpg",
-        role: "default"
-      });
-
-      const session = new Talk.Session({ appId: APP_ID, me });
-
-      const conversation = session.getOrCreateConversation("neurotap-convo");
-      conversation.setParticipant(me);
-      conversation.setParticipant(other);
-
-      const inbox = session.createInbox({ selected: conversation });
-      inbox.mount(document.getElementById("chat-box"));
-    });
-  </script>
 </body>
 </html>

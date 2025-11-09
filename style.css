@@ -1,6 +1,7 @@
-/* Import Montserrat font */
+/* ===== Import Font ===== */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
 
+/* ===== Base ===== */
 body {
   font-family: 'Montserrat', sans-serif;
   background-color: #121212; /* Deep dark aesthetic */
@@ -9,7 +10,7 @@ body {
   line-height: 1.6;
 }
 
-/* Header with brain logo */
+/* ===== Header ===== */
 h1 {
   display: flex;
   align-items: center;
@@ -20,8 +21,6 @@ h1 {
   color: #ffffff;
   letter-spacing: 1px;
 }
-
-/* Brain logo before title */
 h1::before {
   content: '';
   display: inline-block;
@@ -31,16 +30,15 @@ h1::before {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  filter: invert(100%); /* ensures visibility on dark background */
+  filter: invert(100%);
   animation: pulseLogo 2s infinite alternate;
 }
-
 @keyframes pulseLogo {
   from { transform: scale(1); opacity: 0.8; }
   to   { transform: scale(1.1); opacity: 1; }
 }
 
-/* Section styling */
+/* ===== Sections ===== */
 section {
   background-color: #1e1e1e;
   border: 1px solid #333;
@@ -49,13 +47,16 @@ section {
   margin-bottom: 20px;
   transition: all 0.3s ease-in-out;
 }
-
-section:hover {
-  transform: scale(1.01);
-  border-color: #a7d3ff;
+section:hover { transform: scale(1.01); border-color: #a7d3ff; }
+section h2 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #a7d3ff;
+  border-bottom: 1px solid #444;
+  padding-bottom: 4px;
 }
 
-/* Row layout */
+/* ===== Layout ===== */
 .row {
   display: flex;
   gap: 8px;
@@ -63,52 +64,42 @@ section:hover {
   flex-wrap: wrap;
 }
 
-/* Chat box */
+/* ===== Chat Box ===== */
 #chat-box {
   border: 1px solid #444;
   border-radius: 8px;
   background-color: #181818;
   height: 240px;
-  overflow-y: auto;
-  padding: 10px;
-  scroll-behavior: smooth;
+  overflow: hidden;
+  padding: 0;
+}
+#chat-box iframe {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  border: none;
 }
 
-/* Messages */
-.message {
-  padding: 8px 10px;
-  margin: 6px 0;
-  border-left: 3px solid #888;
-  background-color: #222;
-  color: #eee;
-  opacity: 0;
-  transform: translateY(5px);
-  animation: fadeIn 0.4s forwards;
+/* ===== Tone Badge ===== */
+#tone-display {
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 8px;
+  text-align: center;
+  transition: color 0.3s ease-in-out;
+  animation: pulseTone 1.2s infinite alternate;
+}
+@keyframes pulseTone {
+  from { opacity: 0.7; transform: scale(1); }
+  to   { opacity: 1; transform: scale(1.05); }
 }
 
-.message:nth-child(even) {
-  background-color: #242424;
-}
-
-.message .meta {
-  font-size: 12px;
-  color: #aaa;
-}
-
-@keyframes fadeIn {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Brain zones */
+/* ===== Brain Zones ===== */
 .zones {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
-
 .zone {
   padding: 10px;
   text-align: center;
@@ -118,32 +109,37 @@ section:hover {
   color: #ddd;
   transition: all 0.3s ease-in-out;
 }
-
 .zone.active {
   border-color: #fff;
   background-color: #333;
   box-shadow: 0 0 10px #a7d3ff inset;
   animation: pulseZone 1.2s infinite alternate;
 }
-
 @keyframes pulseZone {
   from { box-shadow: 0 0 4px #a7d3ff inset; }
   to   { box-shadow: 0 0 14px #a7d3ff inset; }
 }
 
-/* Neurotransmitters */
+/* ===== Neurotransmitters ===== */
 #tags-list {
   margin-left: 6px;
   font-weight: 500;
   color: #a7d3ff;
+  transition: color 0.3s ease-in-out;
+}
+#tags-list.active {
+  animation: pulseTags 1.2s infinite alternate;
+}
+@keyframes pulseTags {
+  from { text-shadow: 0 0 4px #a7d3ff; opacity: 0.8; }
+  to   { text-shadow: 0 0 12px #a7d3ff; opacity: 1; }
 }
 
-/* History list */
+/* ===== History ===== */
 #history-list {
   list-style: none;
   padding-left: 0;
 }
-
 #history-list li {
   background-color: #222;
   border: 1px solid #444;
@@ -152,16 +148,20 @@ section:hover {
   margin: 6px 0;
   color: #eee;
   transition: all 0.3s ease-in-out;
+  opacity: 0;
+  transform: translateY(5px);
+  animation: fadeIn 0.4s forwards;
 }
-
-/* Tone-colored history items */
+@keyframes fadeIn {
+  to { opacity: 1; transform: translateY(0); }
+}
 #history-list li[data-tone="anger"]   { border-left-color: #e66; }
 #history-list li[data-tone="joy"]     { border-left-color: #fc6; }
 #history-list li[data-tone="focus"]   { border-left-color: #6c6; }
 #history-list li[data-tone="empathy"] { border-left-color: #6cc; }
 #history-list li[data-tone="neutral"] { border-left-color: #bbb; }
 
-/* Translation & Rephraser outputs */
+/* ===== Translation & Rephraser ===== */
 #translation-output,
 #rephrase-output {
   padding: 10px;
@@ -173,7 +173,7 @@ section:hover {
   transition: background-color 0.3s ease-in-out;
 }
 
-/* Inputs & buttons */
+/* ===== Inputs & Buttons ===== */
 input,
 select,
 button {
@@ -184,13 +184,10 @@ button {
   border-radius: 6px;
   transition: all 0.3s ease-in-out;
 }
-
 button {
   cursor: pointer;
   font-weight: 600;
 }
-
-/* Hover & focus states */
 button:hover,
 input:focus,
 select:focus {
@@ -199,30 +196,8 @@ select:focus {
   box-shadow: 0 0 6px #a7d3ff;
 }
 
-
-
-@keyframes wiggle {
-  0% { transform: rotate(0deg); }
-  25% { transform: rotate(2deg); }
-  50% { transform: rotate(-2deg); }
-  75% { transform: rotate(2deg); }
-  100% { transform: rotate(0deg); }
-}
-
-/* Section titles */
-section h2 {
-  font-size: 20px;
-  margin-bottom: 10px;
-  color: #a7d3ff;
-  border-bottom: 1px solid #444;
-  padding-bottom: 4px;
-}
-
-/* Mobile responsiveness */
+/* ===== Mobile ===== */
 @media (max-width: 600px) {
-  .zones {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  #chat-box {
-    height: 160px;
- }
+  .zones { grid-template-columns: repeat(2, 1fr); }
+  #chat-box { height: 160px; }
+}
