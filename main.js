@@ -13,7 +13,7 @@ const rephraseBtn = document.getElementById("rephrase-btn");
 const rephraseOutput = document.getElementById("rephrase-output");
 const groupAlertBtn = document.getElementById("group-alert-btn");
 const usernameInput = document.getElementById("username");
-const toneDisplay = document.getElementById("tone-display"); // NEW: tone badge element
+const toneDisplay = document.getElementById("tone-display");
 
 const zones = {
   amygdala: document.getElementById("amygdala"),
@@ -90,65 +90,6 @@ function getSafeUserName() {
   return name && name.length > 0 ? name : "New User";
 }
 
-// ====== Send Message (tone + history only, no local chat UI) ======
-function sendMessage() {
-  const text = inputEl.value.trim();
-  if (!text) return;
-
-  lastMessage = text;
-  const tone = classifyTone(text);
-
-  stimulateZones(tone.zones);
-  showNeuroTags(tone.neurotransmitters);
-
-  saveHistory({ text, tone: tone.tone, color: tone.color, ts: Date.now() });
-  renderHistory();
-
-  // Show tone badge
-  if (toneDisplay) {
-    toneDisplay.textContent = `Tone: ${tone.tone}`;
-    toneDisplay.style.color = tone.color;
-  }
-
-  inputEl.value = "";
-  console.log("[Neurotap] Message processed locally:", { text, tone: tone.tone });
-}
-sendBtn.addEventListener("click", sendMessage);
-inputEl.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
-
-// ====== Translation ======
-async function translateLastMessage() {
-  if (!lastMessage) {
-    translationOutput.textContent = "No message to translate.";
-    return;
-  }
-
-  const target = langSelect.value || "es";
-  translationOutput.textContent = "Translating…";
-
-  try {
-    const res = await fetch("https://translate.astian.org/translate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        q: lastMessage,
-        source: "auto",
-        target,
-        format: "text"
-      }),
-    });
-
-    if (!res.ok) throw new Error(`Translation API error: ${res.status}`);
-
-    const data = await res.json();
-    translationOutput.textContent = data.translatedText || "(no result)";
-  } catch (err) {
-    console.error("Translation failed:", err);
-    translationOutput.textContent = "Translation failed. Please try again.";
-  }
-}
-translateBtn.addEventListener("click", translateLastMessage);
-
 // ====== Rephraser ======
 function rephrase(text) {
   if (!text) return "";
@@ -172,55 +113,17 @@ groupAlertBtn.addEventListener("click", () => {
   console.log("[Neurotap] Group alert triggered:", alertMsg);
 });
 
-// ====== TalkJS Integration ======
-Talk.ready.then(() => {
-  const APP_ID = "taYrlEsd"; // your real TalkJS App ID
+// ====== Stream Chat Integration ======
+import { StreamChat } from "stream-chat";
 
-  const me = new Talk.User({
-    id: getSafeUserName(),
-    name: getSafeUserName(),
-    email: `${getSafeUserName().toLowerCase()}@example.com`,
-    photoUrl: "https://demo.talkjs.com/img/avatar-1.jpg",
-    role: "default"
-  });
+const client = StreamChat.getInstance(bmj58rf72vts);
 
-  const other = new Talk.User({
-    id: "guest",
-    name: "Guest",
-    email: "guest@example.com",
-    photoUrl: "https://demo.talkjs.com/img/avatar-2.jpg",
-    role: "default"
-  });
+// Connect user
+async function initStream() {
+  await client.connectUser(
+    { id: getSafeUserName(), name: getSafeUserName() },
+    client.devToken(getSafeUserName())
+  );
 
-  const session = new Talk.Session({ appId: APP_ID, me });
-
-  const conversation = session.getOrCreateConversation("neurotap-convo");
-  conversation.setParticipant(me);
-  conversation.setParticipant(other);
-
-  // ✅ Enable built-in dark mode theme
-  const inbox = session.createInbox({
-    selected: conversation,
-    theme: "default-dark"
-  });
-  inbox.mount(chatBox);
-
-  // ===== Hook Neurotap Tone Detection into TalkJS =====
-  conversation.on("message", (event) => {
-    const text = event.message.text;
-    const tone = classifyTone(text);
-
-    stimulateZones(tone.zones);
-    showNeuroTags(tone.neurotransmitters);
-    saveHistory({ text, tone: tone.tone, color: tone.color, ts: Date.now() });
-    renderHistory();
-
-    // Show tone badge
-    if (toneDisplay) {
-      toneDisplay.textContent = `Tone: ${tone.tone}`;
-      toneDisplay.style.color = tone.color;
-    }
-
-    console.log("[Neurotap] Tone detected from TalkJS message:", tone.tone);
-  });
-});
+  const channel = client.channel("messaging", "neurotap-channel", {
+    name: "Neurotap Conversation
