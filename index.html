@@ -10,14 +10,6 @@
 
   <!-- Optional: Google Search Console verification -->
   <meta name="google-site-verification" content="GIvV9PMnUjgoplEDzDbO8PH8PKaLaum4RBHQ4Du-MP0" />
-
-  <!-- TalkJS loader (async, non-blocking) -->
-  <script>
-    (function(t,a,l,k,j,s){
-      s=a.createElement('script');s.async=1;s.src='https://cdn.talkjs.com/talk.js';a.head.appendChild(s)
-      ;k=t.Promise;t.Talk={v:3,ready:{then:function(f){if(k)return new k(function(r,e){l.push([f,r,e])});l
-      .push([f])},catch:function(){return k&&new k()},c:l}};})(window,document,[]);
-  </script>
 </head>
 <body>
   <header>
@@ -39,15 +31,15 @@
     </div>
   </section>
 
-  <!-- ===== Chat (TalkJS mounts here) ===== -->
+  <!-- ===== Chat ===== -->
   <section id="chat">
     <h2>Chat</h2>
-    <div id="chat-box" style="height: 400px;"></div>
+    <div id="chat-box" style="height: 400px; border:1px solid #ccc; padding:8px;"></div>
 
     <!-- Tone badge -->
-    <div id="tone-display" style="margin-top:8px; font-weight:600;"></div>
+    <div id="tone-display" style="margin-top:8px; font-weight:600;">Tone: Neutral</div>
 
-    <!-- Inputs for local features -->
+    <!-- Inputs -->
     <div class="row">
       <input type="text" id="username" placeholder="Your name (for group alerts)">
       <input type="text" id="message-input" placeholder="Type your message…">
@@ -93,6 +85,7 @@
   </section>
 
   <!-- ===== Scripts ===== -->
+  <!-- IMPORTANT: load your main.js as a module -->
   <script type="module" src="main.js"></script>
 </body>
 </html>
