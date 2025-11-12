@@ -94,12 +94,31 @@ function getSafeUserName() {
 function rephrase(text) {
   if (!text) return "";
   let s = text.trim();
+
+  // Anger / Harsh emotions
   s = s.replace(/\bhate\b/gi, "really dislike");
   s = s.replace(/\bangry\b/gi, "frustrated");
   s = s.replace(/\bfurious\b/gi, "very upset");
-  if (/\b(you|your)\b/i.test(s) && /\bwrong|lazy|bad\b/i.test(s)) {
+
+  // Insults
+  s = s.replace(/\bfool(s)?\b/gi, "unwise person");
+  s = s.replace(/\bstupid\b/gi, "not very thoughtful");
+  s = s.replace(/\bidiot(s)?\b/gi, "uninformed person");
+  s = s.replace(/\bdumb\b/gi, "misguided");
+  s = s.replace(/\bloser\b/gi, "struggling person");
+
+  // Dismissive / Harsh negatives
+  s = s.replace(/\blazy\b/gi, "unmotivated");
+  s = s.replace(/\bbad\b/gi, "not ideal");
+  s = s.replace(/\bworthless\b/gi, "not appreciated");
+  s = s.replace(/\bpathetic\b/gi, "in need of support");
+  s = s.replace(/\bweak\b/gi, "still developing");
+
+  // Pattern check for direct attacks
+  if (/\b(you|your)\b/i.test(s) && /\bwrong|lazy|bad|stupid|idiot|fool|pathetic|worthless\b/i.test(s)) {
     s = "Consider rephrasing more constructively.";
   }
+
   return s;
 }
 rephraseBtn.addEventListener("click", () => {
@@ -116,14 +135,56 @@ groupAlertBtn.addEventListener("click", () => {
 // ====== Stream Chat Integration ======
 import { StreamChat } from "stream-chat";
 
-const client = StreamChat.getInstance(bmj58rf72vts);
+// ⚠️ Replace with your real API key from Stream dashboard
+const client = StreamChat.getInstance("bmj58rf72vts");
 
-// Connect user
 async function initStream() {
+  // Connect user with devToken (works in development mode)
   await client.connectUser(
     { id: getSafeUserName(), name: getSafeUserName() },
     client.devToken(getSafeUserName())
   );
 
+  // Create or join channel
   const channel = client.channel("messaging", "neurotap-channel", {
-    name: "Neurotap Conversation
+    name: "Neurotap Conversation",
+    members: [getSafeUserName()]
+  });
+  await channel.watch();
+
+  // Listen for new messages
+  channel.on("message.new", event => {
+    const text = event.message.text;
+    const tone = classifyTone(text);
+
+    stimulateZones(tone.zones);
+    showNeuroTags(tone.neurotransmitters);
+    saveHistory({ text, tone: tone.tone, color: tone.color, ts: Date.now() });
+    renderHistory();
+
+    if (toneDisplay) {
+      toneDisplay.textContent = `Tone: ${tone.tone}`;
+      toneDisplay.style.color = tone.color;
+    }
+
+    console.log("[Neurotap] Tone detected from Stream message:", tone.tone);
+  });
+
+  // Send button handler with rude-word filter
+  sendBtn.addEventListener("click", async () => {
+    const text = inputEl.value.trim();
+    if (!text) return;
+
+    const rudeWords = ["hate","fools","stupid","idiot","dumb","loser","lazy","bad","worthless","pathetic","weak"];
+    if (rudeWords.some(w => text.toLowerCase().includes(w))) {
+      alert("⚠️ Please rephrase using the Rephraser.");
+      rephraseOutput.textContent = rephrase(text);
+      return;
+    }
+
+    await channel.sendMessage({ text });
+    inputEl.value = "";
+  });
+}
+
+initStream();
