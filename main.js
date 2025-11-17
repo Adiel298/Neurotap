@@ -1,3 +1,28 @@
+// ====== Firebase Setup ======
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, collection, addDoc, query, where, orderBy, getDocs, serverTimestamp } 
+  from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getAuth, signInAnonymously } 
+  from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+// 🔑 Your Firebase config (neurotap-c9649 project)
+const firebaseConfig = {
+  apiKey: "AIzaSyA4krwLdtZ1axVU9ioM7WutZqtUbJEN6Gg",
+  authDomain: "neurotap-c9649.firebaseapp.com",
+  databaseURL: "https://neurotap-c9649-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "neurotap-c9649",
+  storageBucket: "neurotap-c9649.firebasestorage.app",
+  messagingSenderId: "505876683169",
+  appId: "1:505876683169:web:3b3923533f5cbe7f6a93e0",
+  measurementId: "G-K9ZDJT2HWN"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+await signInAnonymously(auth);
+
 // ====== UI Elements ======
 const chatBox = document.getElementById("chat-box");
 const inputEl = document.getElementById("message-input");
@@ -95,26 +120,21 @@ function rephrase(text) {
   if (!text) return "";
   let s = text.trim();
 
-  // Anger / Harsh emotions
-  s = s.replace(/\bhate\b/gi, "really dislike");
-  s = s.replace(/\bangry\b/gi, "frustrated");
-  s = s.replace(/\bfurious\b/gi, "very upset");
+  // Replace harsh words
+  s = s.replace(/\bhate\b/gi, "really dislike")
+       .replace(/\bangry\b/gi, "frustrated")
+       .replace(/\bfurious\b/gi, "very upset")
+       .replace(/\bfool(s)?\b/gi, "unwise person")
+       .replace(/\bstupid\b/gi, "not very thoughtful")
+       .replace(/\bidiot(s)?\b/gi, "uninformed person")
+       .replace(/\bdumb\b/gi, "misguided")
+       .replace(/\bloser\b/gi, "struggling person")
+       .replace(/\blazy\b/gi, "unmotivated")
+       .replace(/\bbad\b/gi, "not ideal")
+       .replace(/\bworthless\b/gi, "not appreciated")
+       .replace(/\bpathetic\b/gi, "in need of support")
+       .replace(/\bweak\b/gi, "still developing");
 
-  // Insults
-  s = s.replace(/\bfool(s)?\b/gi, "unwise person");
-  s = s.replace(/\bstupid\b/gi, "not very thoughtful");
-  s = s.replace(/\bidiot(s)?\b/gi, "uninformed person");
-  s = s.replace(/\bdumb\b/gi, "misguided");
-  s = s.replace(/\bloser\b/gi, "struggling person");
-
-  // Dismissive / Harsh negatives
-  s = s.replace(/\blazy\b/gi, "unmotivated");
-  s = s.replace(/\bbad\b/gi, "not ideal");
-  s = s.replace(/\bworthless\b/gi, "not appreciated");
-  s = s.replace(/\bpathetic\b/gi, "in need of support");
-  s = s.replace(/\bweak\b/gi, "still developing");
-
-  // Pattern check for direct attacks
   if (/\b(you|your)\b/i.test(s) && /\bwrong|lazy|bad|stupid|idiot|fool|pathetic|worthless\b/i.test(s)) {
     s = "Consider rephrasing more constructively.";
   }
@@ -127,64 +147,57 @@ rephraseBtn.addEventListener("click", () => {
 });
 
 // ====== Group Alert ======
-groupAlertBtn.addEventListener("click", () => {
+groupAlertBtn.addEventListener("click", async () => {
   const alertMsg = `${getSafeUserName()} triggered a group alert!`;
   console.log("[Neurotap] Group alert triggered:", alertMsg);
+
+  await addDoc(collection(db, "alerts"), {
+    threadId: "demo-thread",
+    user: getSafeUserName(),
+    message: alertMsg,
+    createdAt: serverTimestamp()
+  });
 });
 
-// ====== Stream Chat Integration ======
-import { StreamChat } from "stream-chat";
+// ====== Messaging with Firebase ======
+async function sendMessage() {
+  const text = inputEl.value.trim();
+  if (!text) return;
 
-// ⚠️ Replace with your real API key from Stream dashboard
-const client = StreamChat.getInstance("bmj58rf72vts");
+  const tone = classifyTone(text);
 
-async function initStream() {
-  // Connect user with devToken (works in development mode)
-  await client.connectUser(
-    { id: getSafeUserName(), name: getSafeUserName() },
-    client.devToken(getSafeUserName())
-  );
-
-  // Create or join channel
-  const channel = client.channel("messaging", "neurotap-channel", {
-    name: "Neurotap Conversation",
-    members: [getSafeUserName()]
-  });
-  await channel.watch();
-
-  // Listen for new messages
-  channel.on("message.new", event => {
-    const text = event.message.text;
-    const tone = classifyTone(text);
-
-    stimulateZones(tone.zones);
-    showNeuroTags(tone.neurotransmitters);
-    saveHistory({ text, tone: tone.tone, color: tone.color, ts: Date.now() });
-    renderHistory();
-
-    if (toneDisplay) {
-      toneDisplay.textContent = `Tone: ${tone.tone}`;
-      toneDisplay.style.color = tone.color;
-    }
-
-    console.log("[Neurotap] Tone detected from Stream message:", tone.tone);
+  await addDoc(collection(db, "messages"), {
+    threadId: "demo-thread",
+    senderId: getSafeUserName(),
+    text,
+    tone,
+    createdAt: serverTimestamp()
   });
 
-  // Send button handler with rude-word filter
-  sendBtn.addEventListener("click", async () => {
-    const text = inputEl.value.trim();
-    if (!text) return;
+  stimulateZones(tone.zones);
+  showNeuroTags(tone.neurotransmitters);
+  saveHistory({ text, tone: tone.tone, color: tone.color, ts: Date.now() });
+  renderHistory();
 
-    const rudeWords = ["hate","fools","stupid","idiot","dumb","loser","lazy","bad","worthless","pathetic","weak"];
-    if (rudeWords.some(w => text.toLowerCase().includes(w))) {
-      alert("⚠️ Please rephrase using the Rephraser.");
-      rephraseOutput.textContent = rephrase(text);
-      return;
-    }
+  toneDisplay.textContent = `Tone: ${tone.tone}`;
+  toneDisplay.style.color = tone.color;
 
-    await channel.sendMessage({ text });
-    inputEl.value = "";
+  inputEl.value = "";
+  await refreshMessages();
+}
+
+async function refreshMessages() {
+  const mq = query(collection(db, "messages"), where("threadId", "==", "demo-thread"), orderBy("createdAt", "desc"));
+  const snap = await getDocs(mq);
+  chatBox.innerHTML = "";
+  snap.forEach(doc => {
+    const m = doc.data();
+    const div = document.createElement("div");
+    div.style.borderBottom = "1px solid #ddd";
+    div.style.padding = "6px";
+    div.innerHTML = `<strong>${m.senderId}:</strong> ${m.text}<br/><em>Tone:</em> ${m.tone?.tone || "neutral"}`;
+    chatBox.appendChild(div);
   });
 }
 
-initStream();
+sendBtn.addEventListener

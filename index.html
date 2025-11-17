@@ -34,7 +34,7 @@
   <!-- ===== Chat ===== -->
   <section id="chat">
     <h2>Chat</h2>
-    <div id="chat-box" style="height: 400px; border:1px solid #ccc; padding:8px;"></div>
+    <div id="chat-box" style="height: 400px; border:1px solid #ccc; padding:8px; overflow-y:auto;"></div>
 
     <!-- Tone badge -->
     <div id="tone-display" style="margin-top:8px; font-weight:600;">Tone: Neutral</div>
@@ -84,8 +84,72 @@
     <div id="rephrase-output"></div>
   </section>
 
-  <!-- ===== Scripts ===== -->
-  <!-- IMPORTANT: load your main.js as a module -->
-  <script type="module" src="main.js"></script>
+  <!-- ===== Firebase + Scripts ===== -->
+  <script type="module">
+    // Import Firebase SDKs
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, where, orderBy, getDocs, serverTimestamp } 
+      from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously } 
+      from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+    // ✅ Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCBu3DKRG_EJm_oAL-QRR90_GtbCcgzx18",
+      authDomain: "neurotap-45959.firebaseapp.com",
+      projectId: "neurotap-45959",
+      storageBucket: "neurotap-45959.firebasestorage.app",
+      messagingSenderId: "196532187132",
+      appId: "1:196532187132:web:5358da6ade0ddfa8becc79",
+      measurementId: "G-90C3HCK534"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    await signInAnonymously(auth);
+
+    // Basic demo logic
+    const sendBtn = document.getElementById("send-btn");
+    const messageInput = document.getElementById("message-input");
+    const chatBox = document.getElementById("chat-box");
+    const toneDisplay = document.getElementById("tone-display");
+
+    async function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text) return;
+      await addDoc(collection(db, "messages"), {
+        threadId: "demo-thread",
+        senderId: "demo-user",
+        text,
+        createdAt: serverTimestamp(),
+        status: "sent"
+      });
+      messageInput.value = "";
+      await refreshMessages();
+    }
+
+    async function refreshMessages() {
+      const mq = query(collection(db, "messages"), where("threadId", "==", "demo-thread"), orderBy("createdAt", "desc"));
+      const snap = await getDocs(mq);
+      chatBox.innerHTML = "";
+      snap.forEach(doc => {
+        const m = doc.data();
+        const tone = m.tone ? `${m.tone.label} (${m.tone.score})` : "processing…";
+        const div = document.createElement("div");
+        div.style.borderBottom = "1px solid #ddd";
+        div.style.padding = "6px";
+        div.innerHTML = `<strong>${m.senderId}:</strong> ${m.text}<br/><em>Tone:</em> ${tone}`;
+        chatBox.appendChild(div);
+        toneDisplay.textContent = `Tone: ${tone}`;
+      });
+    }
+
+    sendBtn.onclick = sendMessage;
+    // Auto-refresh every 15s
+    setInterval(refreshMessages, 15000);
+    await refreshMessages();
+  </script>
 </body>
 </html>
