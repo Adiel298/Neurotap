@@ -69,10 +69,8 @@ function renderHistory() {
   loadHistory().slice().reverse().forEach(item => {
     const li = document.createElement("li");
     li.setAttribute("data-tone", item.tone);
-    li.innerHTML = `
-      <strong>${item.tone}</strong> — ${item.text}
-      <span class="meta">(${new Date(item.ts).toLocaleString()})</span>
-    `;
+    li.innerHTML = `<strong>${item.tone}</strong> — ${item.text}
+      <span class="meta">(${new Date(item.ts).toLocaleString()})</span>`;
     ui.history.appendChild(li);
   });
 }
@@ -92,18 +90,10 @@ function rephrase(text) {
   if (!text) return "";
   let s = text.trim();
   const replacements = {
-    hate: "really dislike",
-    angry: "frustrated",
-    furious: "very upset",
-    fools: "unwise person",
-    stupid: "not very thoughtful",
-    idiot: "uninformed person",
-    dumb: "misguided",
-    loser: "struggling person",
-    lazy: "unmotivated",
-    bad: "not ideal",
-    worthless: "not appreciated",
-    pathetic: "in need of support",
+    hate: "really dislike", angry: "frustrated", furious: "very upset",
+    fools: "unwise person", stupid: "not very thoughtful", idiot: "uninformed person",
+    dumb: "misguided", loser: "struggling person", lazy: "unmotivated",
+    bad: "not ideal", worthless: "not appreciated", pathetic: "in need of support",
     weak: "still developing"
   };
   for (const [key, val] of Object.entries(replacements)) {
@@ -120,10 +110,8 @@ ui.rephraseBtn.addEventListener("click", () => {
 });
 
 // ====== Stream Chat Integration ======
-import { StreamChat } from "stream-chat";
-
-// ✅ Use your API Key here
-const client = StreamChat.getInstance("bmj58rf72vts");
+const { StreamChat } = window.StreamChat; // CDN version
+const client = StreamChat.getInstance("bmj58rf72vts"); // your API key
 
 async function initStream() {
   await client.connectUser(
